@@ -1,0 +1,8 @@
+.comp2 {
+    display: flex;
+    border: 2px solid green;
+    background-color: lightgreen;
+    padding: 10px;
+    margin: 10px;
+    width: 48%;
+}
