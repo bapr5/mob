@@ -1,9 +1,7 @@
 import type { Route } from "./+types/home";
 import { useState } from "react";
-import SlidingPane from "react-sliding-pane";
 
 import classes from "./home.module.css"
-import { CSidebar} from '@coreui/react'
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -13,7 +11,6 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const [swipe,setSwipe] = useState<string>("none")
   const [touchStart, setTouchStart] = useState(null)
   const [touchEnd, setTouchEnd] = useState(null)
   const [sideBarOpen, setSideBarOpen] = useState<boolean>(false)
@@ -35,15 +32,32 @@ export default function Home() {
     if (isLeftSwipe || isRightSwipe) console.log('swipe', isLeftSwipe ? setSideBarOpen(false) : setSideBarOpen(true))
   }
 
-  return <div className={classes.home} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} >
-      <CSidebar visible={sideBarOpen} className={classes.sidebar} onHide={() => setSideBarOpen(false)}>
-        <div style={{padding: '20px', color: '#222'}}>Сайдбар контент</div>
-      </CSidebar>
-      <div style={{padding: '20px'}}>
-        <h2>Главная страница</h2>
-        <p>Свайпните вправо, чтобы открыть сайдбар, влево — чтобы закрыть.</p>
-        <div>Состояние: {sideBarOpen ? "Открыт" : "Закрыт"}</div>
-      </div>
-  </div>;
+  return (
+    <div className={classes.home} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+      <header className={classes.header}>
+        <button
+          className={classes['arrow-btn']}
+          onClick={() => setSideBarOpen(!sideBarOpen)}
+          aria-label={sideBarOpen ? 'Закрыть сайдбар' : 'Открыть сайдбар'}
+        >
+          <span
+            className={sideBarOpen ? `${classes['arrow-icon']} ${classes['open']}` : classes['arrow-icon']}
+            aria-hidden="true"
+          >
+            ➡️
+          </span>
+        </button>
+        <span className={classes['header-logo']}>mob</span>
+        <span style={{ verticalAlign: 'middle' }}>Приложение</span>
+      </header>
+      <span><div className={sideBarOpen ? `${classes.sidebar} ${classes.open}` : classes.sidebar}></div>
+        <div style={{ padding: '20px' }}>
+          <h2>Главная страница</h2>
+          <p>Свайпните вправо, чтобы открыть сайдбар, влево — чтобы закрыть.</p>
+          <div>Состояние: {sideBarOpen ? "Открыт" : "Закрыт"}</div>
+        </div>
+      </span>
+    </div>
+  );
 
 }
