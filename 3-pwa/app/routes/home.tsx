@@ -1,6 +1,7 @@
 import type { Route } from "./+types/home";
 import { useState } from "react";
 import Sidebar from "../components/Sidebar/Sidebar";
+import Choicer from "../components/Choicer/Choicer";
 import classes from "./home.module.css";
 
 export function meta({ }: Route.MetaArgs) {
@@ -15,6 +16,11 @@ export default function Home() {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [sideBarOpen, setSideBarOpen] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<string>("home");
+  const [selectedChoice, setSelectedChoice] = useState<{
+    country: string;
+    show: string;
+    episode: string;
+  } | null>(null);
 
   const minSwipeDistance = 50;
 
@@ -49,6 +55,13 @@ export default function Home() {
         <>
           <h2>Профиль</h2>
           <p>Здесь будет информация о пользователе.</p>
+          <Choicer onSelect={setSelectedChoice} />
+          {selectedChoice && (
+            <div style={{marginTop: 16, fontSize: 16}}>
+              <strong>Выбранный элемент:</strong><br />
+              {selectedChoice.country} → {selectedChoice.show} → {selectedChoice.episode}
+            </div>
+          )}
         </>
       );
       break;
