@@ -14,6 +14,7 @@ export default function Home() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [sideBarOpen, setSideBarOpen] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<string>("home");
 
   const minSwipeDistance = 50;
 
@@ -33,6 +34,34 @@ export default function Home() {
     if (isRightSwipe) setSideBarOpen(true);
   };
 
+  let pageContent;
+  switch (currentPage) {
+    case "about":
+      pageContent = (
+        <>
+          <h2>О приложении</h2>
+          <p>Это простое PWA-приложение на React.</p>
+        </>
+      );
+      break;
+    case "profile":
+      pageContent = (
+        <>
+          <h2>Профиль</h2>
+          <p>Здесь будет информация о пользователе.</p>
+        </>
+      );
+      break;
+    default:
+      pageContent = (
+        <>
+          <h2>Главная страница</h2>
+          <p>Свайпните вправо, чтобы открыть сайдбар, влево — чтобы закрыть.</p>
+          <div>Состояние: {sideBarOpen ? "Открыт" : "Закрыт"}</div>
+        </>
+      );
+  }
+
   return (
     <div
       className={classes.home}
@@ -40,7 +69,15 @@ export default function Home() {
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
-      <Sidebar open={sideBarOpen} onClose={() => setSideBarOpen(false)} />
+      <Sidebar
+        open={sideBarOpen}
+        onClose={() => setSideBarOpen(false)}
+        currentPage={currentPage}
+        onNavigate={(page) => {
+          setCurrentPage(page);
+          setSideBarOpen(false);
+        }}
+      />
       <header className={classes.header}>
         <button
           className={classes['arrow-btn']}
@@ -58,9 +95,7 @@ export default function Home() {
         <span style={{ verticalAlign: 'middle' }}>Приложение</span>
       </header>
       <div style={{ padding: '20px' }}>
-        <h2>Главная страница</h2>
-        <p>Свайпните вправо, чтобы открыть сайдбар, влево — чтобы закрыть.</p>
-        <div>Состояние: {sideBarOpen ? "Открыт" : "Закрыт"}</div>
+        {pageContent}
       </div>
     </div>
   );

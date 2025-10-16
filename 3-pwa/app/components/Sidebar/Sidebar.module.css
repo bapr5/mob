@@ -12,6 +12,9 @@
   display: flex;
   flex-direction: column;
 }
+.sidebar button {
+    cursor: pointer;
+}
 
 .open {
   transform: translateX(0);
@@ -28,4 +31,10 @@
 
 .content {
   padding: 24px;
+}
+
+.active {
+  font-weight: bold;
+  color: #1976d2;
+  background: #e3f2fd;
 }
