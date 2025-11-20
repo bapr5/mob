@@ -3,6 +3,8 @@ import { useState } from "react";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Choicer from "../components/Choicer/Choicer";
 import classes from "./home.module.css";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -65,6 +67,14 @@ export default function Home() {
         </>
       );
       break;
+    case "emojis":
+      pageContent = (
+        <>
+          <h2>Emojis</h2>
+          <p>Here are some emojis: 😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤐 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 👹 👺 🤡 💩 👻 💀 ☠️ 👽 👾 🤖 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾</p>
+        </>
+      );
+      break;
     default:
       pageContent = (
         <>
@@ -97,12 +107,11 @@ export default function Home() {
           onClick={() => setSideBarOpen(!sideBarOpen)}
           aria-label={sideBarOpen ? 'Закрыть сайдбар' : 'Открыть сайдбар'}
         >
-          <span
+          <FontAwesomeIcon
+            icon={faBars}
             className={sideBarOpen ? `${classes['arrow-icon']} ${classes['open']}` : classes['arrow-icon']}
             aria-hidden="true"
-          >
-            ➡️
-          </span>
+          />
         </button>
         <span className={classes['header-logo']}>mob</span>
         <span style={{ verticalAlign: 'middle' }}>Приложение</span>

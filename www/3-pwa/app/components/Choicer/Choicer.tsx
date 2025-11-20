@@ -1,83 +1,134 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faArrowUp, faArrowLeft, faPlus, faDownload, faFileImport } from '@fortawesome/free-solid-svg-icons';
+import categories from '../../categories.json';
 
 type MenuData = {
-  [country: string]: {
-    [show: string]: string[];
+  [theme: string]: {
+    [country: string]: {
+      [show: string]: {
+        [season: string]: string[];
+      };
+    };
   };
 };
 
-const initialMenuData: MenuData = {
-  Россия: {
-    "Кухня": ["Серия 1", "Серия 2", "Серия 3"],
-    "Интерны": ["Серия 1", "Серия 2"],
-  },
-  США: {
-    "Friends": ["Episode 1", "Episode 2"],
-    "Breaking Bad": ["Episode 1", "Episode 2", "Episode 3"],
-  },
-  Япония: {
-    "Naruto": ["Эпизод 1", "Эпизод 2"],
-    "Attack on Titan": ["Эпизод 1"],
-  },
-};
-
 type ChoicerProps = {
-  onSelect?: (selected: { country: string; show: string; episode: string }) => void;
+  onSelect?: (selected: { theme: string; country: string; show: string; season: string; episode: string }) => void;
 };
 
 const Choicer: React.FC<ChoicerProps> = ({ onSelect }) => {
-  const [menuData, setMenuData] = useState<MenuData>(initialMenuData);
+  const [menuData, setMenuData] = useState<MenuData>({} as MenuData);
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedShow, setSelectedShow] = useState<string | null>(null);
+  const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
   const [selectedEpisode, setSelectedEpisode] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [newItem, setNewItem] = useState("");
 
+  useEffect(() => {
+    setMenuData(categories);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('menuData', JSON.stringify(menuData));
+  }, [menuData]);
+
+  const handleThemeSelect = (theme: string) => {
+    setSelectedTheme(theme);
+    setSelectedCountry(null);
+    setSelectedShow(null);
+    setSelectedSeason(null);
+    setSelectedEpisode(null);
+  };
+
   const handleCountrySelect = (country: string) => {
     setSelectedCountry(country);
     setSelectedShow(null);
+    setSelectedSeason(null);
     setSelectedEpisode(null);
   };
 
   const handleShowSelect = (show: string) => {
     setSelectedShow(show);
+    setSelectedSeason(null);
+    setSelectedEpisode(null);
+  };
+
+  const handleSeasonSelect = (season: string) => {
+    setSelectedSeason(season);
     setSelectedEpisode(null);
   };
 
   const handleEpisodeSelect = (episode: string) => {
     setSelectedEpisode(episode);
-    if (selectedCountry && selectedShow && onSelect) {
-      onSelect({ country: selectedCountry, show: selectedShow, episode });
+    if (selectedTheme && selectedCountry && selectedShow && selectedSeason && onSelect) {
+      onSelect({ theme: selectedTheme, country: selectedCountry, show: selectedShow, season: selectedSeason, episode });
     }
   };
 
-  const addCountry = () => {
+  const addTheme = () => {
     if (newItem.trim() && !menuData[newItem]) {
       setMenuData(prev => ({ ...prev, [newItem]: {} }));
       setNewItem("");
     }
   };
 
-  const deleteCountry = (country: string) => {
+  const deleteTheme = (theme: string) => {
     setMenuData(prev => {
       const updated = { ...prev };
-      delete updated[country];
+      delete updated[theme];
       return updated;
     });
-    if (selectedCountry === country) {
+    if (selectedTheme === theme) {
+      setSelectedTheme(null);
       setSelectedCountry(null);
       setSelectedShow(null);
+      setSelectedSeason(null);
       setSelectedEpisode(null);
     }
   };
 
-  const addShow = () => {
-    if (selectedCountry && newItem.trim() && !menuData[selectedCountry][newItem]) {
+  const addCountry = () => {
+    if (selectedTheme && newItem.trim() && !menuData[selectedTheme][newItem]) {
       setMenuData(prev => ({
         ...prev,
-        [selectedCountry]: {
-          ...prev[selectedCountry],
-          [newItem]: []
+        [selectedTheme]: {
+          ...prev[selectedTheme],
+          [newItem]: {}
+        }
+      }));
+      setNewItem("");
+    }
+  };
+
+  const deleteCountry = (country: string) => {
+    if (selectedTheme) {
+      setMenuData(prev => {
+        const updated = { ...prev };
+        delete updated[selectedTheme][country];
+        return updated;
+      });
+      if (selectedCountry === country) {
+        setSelectedCountry(null);
+        setSelectedShow(null);
+        setSelectedSeason(null);
+        setSelectedEpisode(null);
+      }
+    }
+  };
+
+  const addShow = () => {
+    if (selectedTheme && selectedCountry && newItem.trim() && !menuData[selectedTheme][selectedCountry][newItem]) {
+      setMenuData(prev => ({
+        ...prev,
+        [selectedTheme]: {
+          ...prev[selectedTheme],
+          [selectedCountry]: {
+            ...prev[selectedTheme][selectedCountry],
+            [newItem]: {}
+          }
         }
       }));
       setNewItem("");
@@ -85,39 +136,85 @@ const Choicer: React.FC<ChoicerProps> = ({ onSelect }) => {
   };
 
   const deleteShow = (show: string) => {
-    if (selectedCountry) {
+    if (selectedTheme && selectedCountry) {
       setMenuData(prev => {
         const updated = { ...prev };
-        delete updated[selectedCountry][show];
+        delete updated[selectedTheme][selectedCountry][show];
         return updated;
       });
       if (selectedShow === show) {
         setSelectedShow(null);
+        setSelectedSeason(null);
         setSelectedEpisode(null);
       }
     }
   };
 
-  const addEpisode = () => {
-    if (selectedCountry && selectedShow && newItem.trim()) {
+  const addSeason = () => {
+    if (selectedTheme && selectedCountry && selectedShow && newItem.trim() && !menuData[selectedTheme][selectedCountry][selectedShow][newItem]) {
       setMenuData(prev => ({
         ...prev,
-        [selectedCountry]: {
-          ...prev[selectedCountry],
-          [selectedShow]: [...prev[selectedCountry][selectedShow], newItem]
+        [selectedTheme]: {
+          ...prev[selectedTheme],
+          [selectedCountry]: {
+            ...prev[selectedTheme][selectedCountry],
+            [selectedShow]: {
+              ...prev[selectedTheme][selectedCountry][selectedShow],
+              [newItem]: []
+            }
+          }
         }
       }));
       setNewItem("");
     }
   };
 
-  const deleteEpisode = (episode: string) => {
-    if (selectedCountry && selectedShow) {
+  const addEpisode = () => {
+    if (selectedTheme && selectedCountry && selectedShow && selectedSeason && newItem.trim()) {
       setMenuData(prev => ({
         ...prev,
-        [selectedCountry]: {
-          ...prev[selectedCountry],
-          [selectedShow]: prev[selectedCountry][selectedShow].filter(e => e !== episode)
+        [selectedTheme]: {
+          ...prev[selectedTheme],
+          [selectedCountry]: {
+            ...prev[selectedTheme][selectedCountry],
+            [selectedShow]: {
+              ...prev[selectedTheme][selectedCountry][selectedShow],
+              [selectedSeason]: [...prev[selectedTheme][selectedCountry][selectedShow][selectedSeason], newItem]
+            }
+          }
+        }
+      }));
+      setNewItem("");
+    }
+  };
+
+  const deleteSeason = (season: string) => {
+    if (selectedTheme && selectedCountry && selectedShow) {
+      setMenuData(prev => {
+        const updated = { ...prev };
+        delete updated[selectedTheme][selectedCountry][selectedShow][season];
+        return updated;
+      });
+      if (selectedSeason === season) {
+        setSelectedSeason(null);
+        setSelectedEpisode(null);
+      }
+    }
+  };
+
+  const deleteEpisode = (episode: string) => {
+    if (selectedTheme && selectedCountry && selectedShow && selectedSeason) {
+      setMenuData(prev => ({
+        ...prev,
+        [selectedTheme]: {
+          ...prev[selectedTheme],
+          [selectedCountry]: {
+            ...prev[selectedTheme][selectedCountry],
+            [selectedShow]: {
+              ...prev[selectedTheme][selectedCountry][selectedShow],
+              [selectedSeason]: prev[selectedTheme][selectedCountry][selectedShow][selectedSeason].filter(e => e !== episode)
+            }
+          }
         }
       }));
       if (selectedEpisode === episode) {
@@ -126,21 +223,82 @@ const Choicer: React.FC<ChoicerProps> = ({ onSelect }) => {
     }
   };
 
+
+  const exportData = () => {
+    const dataStr = JSON.stringify(menuData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const exportFileDefaultName = 'menuData.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target?.result as string);
+          setMenuData(data);
+        } catch (err) {
+          alert('Invalid JSON file');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
   return (
     <div style={{ maxWidth: 400, margin: "0 auto", padding: 16 }}>
       <button style={editBtnStyle} onClick={() => setIsEditMode(!isEditMode)}>
         {isEditMode ? "Выйти из режима редактирования" : "Режим редактирования"}
       </button>
-      {!selectedCountry && (
+      {isEditMode && (
+        <div style={{ marginTop: 16 }}>
+          <button style={addBtnStyle} onClick={exportData}><FontAwesomeIcon icon={faDownload} /> Экспорт в JSON</button>
+          <input type="file" accept=".json" onChange={handleImport} style={{ marginLeft: 8 }} />
+        </div>
+      )}
+      {!selectedTheme && (
         <div>
-          <h3>Выберите страну</h3>
-          {Object.keys(menuData).map(country => (
+          <h3>Выберите тему</h3>
+          {Object.keys(menuData).map(theme => (
+            <div key={theme} style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
+              <button style={btnStyle} onClick={() => handleThemeSelect(theme)}>
+                {theme}
+              </button>
+              {isEditMode && (
+                <button style={deleteBtnStyle} onClick={() => deleteTheme(theme)}><FontAwesomeIcon icon={faTrash} /></button>
+              )}
+            </div>
+          ))}
+          {isEditMode && (
+            <div style={{ marginTop: 16 }}>
+              <input
+                type="text"
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Новая тема"
+                style={inputStyle}
+              />
+              <button style={addBtnStyle} onClick={addTheme}><FontAwesomeIcon icon={faPlus} /> Добавить тему</button>
+            </div>
+          )}
+        </div>
+      )}
+      {selectedTheme && !selectedCountry && (
+        <div>
+          <button style={backBtnStyle} onClick={() => setSelectedTheme(null)}><FontAwesomeIcon icon={faArrowLeft} /> Назад</button>
+          <h3>Выберите страну в теме {selectedTheme}</h3>
+          {Object.keys(menuData[selectedTheme]).map(country => (
             <div key={country} style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
               <button style={btnStyle} onClick={() => handleCountrySelect(country)}>
                 {country}
               </button>
               {isEditMode && (
-                <button style={deleteBtnStyle} onClick={() => deleteCountry(country)}>Удалить</button>
+                <button style={deleteBtnStyle} onClick={() => deleteCountry(country)}><FontAwesomeIcon icon={faTrash} /></button>
               )}
             </div>
           ))}
@@ -153,22 +311,22 @@ const Choicer: React.FC<ChoicerProps> = ({ onSelect }) => {
                 placeholder="Новая страна"
                 style={inputStyle}
               />
-              <button style={addBtnStyle} onClick={addCountry}>Добавить страну</button>
+              <button style={addBtnStyle} onClick={addCountry}><FontAwesomeIcon icon={faPlus} /> Добавить страну</button>
             </div>
           )}
         </div>
       )}
-      {selectedCountry && !selectedShow && (
+      {selectedTheme && selectedCountry && !selectedShow && (
         <div>
-          <button style={backBtnStyle} onClick={() => setSelectedCountry(null)}>← Назад</button>
+          <button style={backBtnStyle} onClick={() => setSelectedCountry(null)}><FontAwesomeIcon icon={faArrowLeft} /> Назад</button>
           <h3>Сериалы из {selectedCountry}</h3>
-          {Object.keys(menuData[selectedCountry]).map(show => (
+          {Object.keys(menuData[selectedTheme][selectedCountry]).map(show => (
             <div key={show} style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
               <button style={btnStyle} onClick={() => handleShowSelect(show)}>
                 {show}
               </button>
               {isEditMode && (
-                <button style={deleteBtnStyle} onClick={() => deleteShow(show)}>Удалить</button>
+                <button style={deleteBtnStyle} onClick={() => deleteShow(show)}><FontAwesomeIcon icon={faTrash} /></button>
               )}
             </div>
           ))}
@@ -181,22 +339,22 @@ const Choicer: React.FC<ChoicerProps> = ({ onSelect }) => {
                 placeholder="Новый сериал"
                 style={inputStyle}
               />
-              <button style={addBtnStyle} onClick={addShow}>Добавить сериал</button>
+              <button style={addBtnStyle} onClick={addShow}><FontAwesomeIcon icon={faPlus} /> Добавить сериал</button>
             </div>
           )}
         </div>
       )}
-      {selectedCountry && selectedShow && !selectedEpisode && (
+      {selectedTheme && selectedCountry && selectedShow && !selectedSeason && (
         <div>
-          <button style={backBtnStyle} onClick={() => setSelectedShow(null)}>← Назад</button>
-          <h3>{selectedShow}: серии</h3>
-          {menuData[selectedCountry][selectedShow].map(episode => (
-            <div key={episode} style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
-              <button style={btnStyle} onClick={() => handleEpisodeSelect(episode)}>
-                {episode}
+          <button style={backBtnStyle} onClick={() => setSelectedShow(null)}><FontAwesomeIcon icon={faArrowLeft} /> Назад</button>
+          <h3>Выберите сезон в {selectedShow}</h3>
+          {Object.keys(menuData[selectedTheme][selectedCountry][selectedShow]).map(season => (
+            <div key={season} style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
+              <button style={btnStyle} onClick={() => handleSeasonSelect(season)}>
+                {season}
               </button>
               {isEditMode && (
-                <button style={deleteBtnStyle} onClick={() => deleteEpisode(episode)}>Удалить</button>
+                <button style={deleteBtnStyle} onClick={() => deleteSeason(season)}><FontAwesomeIcon icon={faTrash} /></button>
               )}
             </div>
           ))}
@@ -206,24 +364,54 @@ const Choicer: React.FC<ChoicerProps> = ({ onSelect }) => {
                 type="text"
                 value={newItem}
                 onChange={(e) => setNewItem(e.target.value)}
-                placeholder="Новая серия"
+                placeholder="Новый сезон"
                 style={inputStyle}
               />
-              <button style={addBtnStyle} onClick={addEpisode}>Добавить серию</button>
+              <button style={addBtnStyle} onClick={addSeason}><FontAwesomeIcon icon={faPlus} /> Добавить сезон</button>
             </div>
           )}
         </div>
       )}
-      {selectedCountry && selectedShow && selectedEpisode && (
+      {selectedTheme && selectedCountry && selectedShow && selectedSeason && !selectedEpisode && (
         <div>
-          <button style={backBtnStyle} onClick={() => setSelectedEpisode(null)}>← Назад</button>
+          <button style={backBtnStyle} onClick={() => setSelectedSeason(null)}><FontAwesomeIcon icon={faArrowLeft} /> Назад</button>
+          <h3>Эпизоды {selectedSeason}</h3>
+          {menuData[selectedTheme][selectedCountry][selectedShow][selectedSeason].map((episode: string) => (
+            <div key={episode} style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
+              <button style={btnStyle} onClick={() => handleEpisodeSelect(episode)}>
+                {episode}
+              </button>
+              {isEditMode && (
+                <button style={deleteBtnStyle} onClick={() => deleteEpisode(episode)}><FontAwesomeIcon icon={faTrash} /></button>
+              )}
+            </div>
+          ))}
+          {isEditMode && (
+            <div style={{ marginTop: 16 }}>
+              <input
+                type="text"
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Новый эпизод"
+                style={inputStyle}
+              />
+              <button style={addBtnStyle} onClick={addEpisode}><FontAwesomeIcon icon={faPlus} /> Добавить эпизод</button>
+            </div>
+          )}
+        </div>
+      )}
+      {selectedTheme && selectedCountry && selectedShow && selectedSeason && selectedEpisode && (
+        <div>
+          <button style={backBtnStyle} onClick={() => setSelectedEpisode(null)}><FontAwesomeIcon icon={faArrowLeft} /> Назад</button>
           <h3>Вы выбрали:</h3>
           <div style={{fontSize: 18, margin: "16px 0"}}>
-            <strong>{selectedCountry}</strong> → <strong>{selectedShow}</strong> → <strong>{selectedEpisode}</strong>
+            <strong>{selectedTheme}</strong> → <strong>{selectedCountry}</strong> → <strong>{selectedShow}</strong> → <strong>{selectedSeason}</strong> → <strong>{selectedEpisode}</strong>
           </div>
           <button style={btnStyle} onClick={() => {
+            setSelectedTheme(null);
             setSelectedCountry(null);
             setSelectedShow(null);
+            setSelectedSeason(null);
             setSelectedEpisode(null);
           }}>Сбросить выбор</button>
         </div>
