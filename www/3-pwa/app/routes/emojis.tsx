@@ -1,4 +1,45 @@
 import type { Route } from "./+types/emojis";
+import { useRef, useEffect, useState } from 'react';
+import emojis from '../emojis.json';
+
+const LazyImage = ({ src, alt }: { src: string; alt: string }) => {
+  const imgRef = useRef(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsLoaded(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+    return () => {
+      if (imgRef.current) {
+        observer.unobserve(imgRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <>
+    <img
+      ref={imgRef}
+      src={isLoaded ? src : ''}
+      alt={alt}
+      style={{ width: '50px', height: '50px', margin: '5px' }}
+    />
+    <>{alt}</>
+    </>
+  );
+};
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -8,10 +49,12 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export default function Emojis() {
+  const emojiEntries = Object.entries(emojis);
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Emojis</h2>
-      <p>Here are some emojis: 😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤐 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 👹 👺 🤡 💩 👻 💀 ☠️ 👽 👾 🤖 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾</p>
+      {emojiEntries.map(([name, url]) => (
+        <LazyImage key={name} src={url} alt={name} />
+      ))}
     </div>
   );
 }
